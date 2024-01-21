@@ -1,3 +1,4 @@
 .vscode/
 *.pdf
-Assignment 2/utils/__pycache__/
+datasets/
+__pycache__/
