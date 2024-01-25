@@ -1,6 +1,6 @@
 # ref: https://beta.ruff.rs/docs/rules/
 select = ["B", "C4", "E", "F", "N", "I", "W", "UP"]
-ignore = ["F403","F405","E501","E402"]
+ignore = ["F403","F405","E501","E402","E731"]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
 fixable = ["A", "B", "C", "D", "E", "F", "I", "UP"]
