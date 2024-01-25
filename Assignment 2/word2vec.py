@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import argparse
-from collections import defaultdict
 import numpy as np
 import random
 
