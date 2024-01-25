@@ -1,13 +1,13 @@
 #!/usr/bin/env python
+import glob
+import os.path as op
+import pickle
+import random
+
+import numpy as np
 
 # Save parameters every a few SGD iterations as fail-safe
 SAVE_PARAMS_EVERY = 5000
-
-import pickle
-import glob
-import random
-import numpy as np
-import os.path as op
 
 
 def load_saved_params():
@@ -108,7 +108,7 @@ def sgd(f, x0, step, iterations, postprocessing=None, useSaved=False, PRINT_EVER
 
 
 def sanity_check():
-    quad = lambda x: (np.sum(x ** 2), x * 2)
+    quad = lambda x: (np.sum(x**2), x * 2)
 
     print("Running sanity checks...")
     t1 = sgd(quad, 0.5, 0.01, 1000, PRINT_EVERY=100)
