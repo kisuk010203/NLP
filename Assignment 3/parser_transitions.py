@@ -6,9 +6,7 @@ Sahil Chopra <schopra8@stanford.edu>
 Haoshen Hong <haoshen@stanford.edu>
 """
 
-import enum
 import sys
-from torch import nn
 
 
 class PartialParse:
@@ -52,6 +50,7 @@ class PartialParse:
         elif transition == "LA":
             self.dependencies.append((self.stack[-1], self.stack.pop(-2)))
         elif transition == "RA":
+            print(self.stack)
             self.dependencies.append((self.stack[-2], self.stack.pop(-1)))
         else:
             raise Exception("Invalid transition")
@@ -95,7 +94,6 @@ def minibatch_parse(sentences, model, batch_size):
                                                     same as in sentences (i.e., dependencies[i] should
                                                     contain the parse for sentences[i]).
     """
-    dependencies = [[] for _ in sentences]
 
     ### YOUR CODE HERE (~8-10 Lines)
     ### TODO:
@@ -112,14 +110,14 @@ def minibatch_parse(sentences, model, batch_size):
     ###             is being accessed by `partial_parses` and may cause your code to crash.
     partial_parses = [PartialParse(sentence) for sentence in sentences]
     unfinished_parses = partial_parses[:]
-    parse_to_idx = {parse: idx for (idx, parse) in enumerate(unfinished_parses)}
-    while unfinished_parses:
-        transitions = model.predict(unfinished_parses[: min(batch_size, len(unfinished_parses))])
+    while len(unfinished_parses) > 0:
+        minibatch = unfinished_parses[:batch_size]
+        transitions = model.predict(minibatch)
         for i, transition in enumerate(transitions):
-            unfinished_parses[i].parse_step(transition)
-            if len(unfinished_parses[i].stack) == 1 and len(unfinished_parses[i].buffer) == 0:
-                dependencies[parse_to_idx[unfinished_parses[i]]] = unfinished_parses[i].dependencies
-                unfinished_parses = unfinished_parses[:i] + unfinished_parses[i + 1 :]
+            minibatch[i].parse_step(transition)
+            if len(minibatch[i].buffer) == 0 and len(minibatch[i].stack) == 1:
+                unfinished_parses.remove(minibatch[i])
+    dependencies = [pp.dependencies for pp in partial_parses]
     ### END YOUR CODE
 
     return dependencies
