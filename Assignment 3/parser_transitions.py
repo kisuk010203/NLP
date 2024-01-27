@@ -6,7 +6,9 @@ Sahil Chopra <schopra8@stanford.edu>
 Haoshen Hong <haoshen@stanford.edu>
 """
 
+import enum
 import sys
+from torch import nn
 
 
 class PartialParse:
@@ -32,7 +34,9 @@ class PartialParse:
         ### Note: The root token should be represented with the string "ROOT"
         ### Note: If you need to use the sentence object to initialize anything, make sure to not directly
         ###       reference the sentence object.  That is, remember to NOT modify the sentence object.
-
+        self.stack = ["ROOT"]
+        self.buffer: list[str] = sentence[:]
+        self.dependencies = []
         ### END YOUR CODE
 
     def parse_step(self, transition):
@@ -43,7 +47,14 @@ class PartialParse:
                                 transition is a legal transition.
         """
         ### YOUR CODE HERE (~7-12 Lines)
-        ### TODO:
+        if transition == "S":
+            self.stack.append(self.buffer.pop(0))
+        elif transition == "LA":
+            self.dependencies.append((self.stack[-1], self.stack.pop(-2)))
+        elif transition == "RA":
+            self.dependencies.append((self.stack[-2], self.stack.pop(-1)))
+        else:
+            raise Exception("Invalid transition")
         ###     Implement a single parsing step, i.e. the logic for the following as
         ###     described in the pdf handout:
         ###         1. Shift
@@ -84,7 +95,7 @@ def minibatch_parse(sentences, model, batch_size):
                                                     same as in sentences (i.e., dependencies[i] should
                                                     contain the parse for sentences[i]).
     """
-    dependencies = []
+    dependencies = [[] for _ in sentences]
 
     ### YOUR CODE HERE (~8-10 Lines)
     ### TODO:
@@ -99,7 +110,16 @@ def minibatch_parse(sentences, model, batch_size):
     ###             contains references to the same objects. Thus, you should NOT use the `del` operator
     ###             to remove objects from the `unfinished_parses` list. This will free the underlying memory that
     ###             is being accessed by `partial_parses` and may cause your code to crash.
-
+    partial_parses = [PartialParse(sentence) for sentence in sentences]
+    unfinished_parses = partial_parses[:]
+    parse_to_idx = {parse: idx for (idx, parse) in enumerate(unfinished_parses)}
+    while unfinished_parses:
+        transitions = model.predict(unfinished_parses[: min(batch_size, len(unfinished_parses))])
+        for i, transition in enumerate(transitions):
+            unfinished_parses[i].parse_step(transition)
+            if len(unfinished_parses[i].stack) == 1 and len(unfinished_parses[i].buffer) == 0:
+                dependencies[parse_to_idx[unfinished_parses[i]]] = unfinished_parses[i].dependencies
+                unfinished_parses = unfinished_parses[:i] + unfinished_parses[i + 1 :]
     ### END YOUR CODE
 
     return dependencies
@@ -111,7 +131,11 @@ def test_step(name, transition, stack, buf, deps, ex_stack, ex_buf, ex_deps):
     pp.stack, pp.buffer, pp.dependencies = stack, buf, deps
 
     pp.parse_step(transition)
-    stack, buf, deps = (tuple(pp.stack), tuple(pp.buffer), tuple(sorted(pp.dependencies)))
+    stack, buf, deps = (
+        tuple(pp.stack),
+        tuple(pp.buffer),
+        tuple(sorted(pp.dependencies)),
+    )
     assert stack == ex_stack, f"{name} test resulted in stack {stack}, expected {ex_stack}"
     assert buf == ex_buf, f"{name} test resulted in buffer {buf}, expected {ex_buf}"
     assert deps == ex_deps, f"{name} test resulted in dependency list {deps}, expected {ex_deps}"
@@ -123,7 +147,14 @@ def test_parse_step():
     Warning: these are not exhaustive
     """
     test_step(
-        "SHIFT", "S", ["ROOT", "the"], ["cat", "sat"], [], ("ROOT", "the", "cat"), ("sat",), ()
+        "SHIFT",
+        "S",
+        ["ROOT", "the"],
+        ["cat", "sat"],
+        [],
+        ("ROOT", "the", "cat"),
+        ("sat",),
+        (),
     )
     test_step(
         "LEFT-ARC",
@@ -223,7 +254,9 @@ def test_minibatch_parse():
     ]
     deps = minibatch_parse(sentences, DummyModel(), 2)
     test_dependencies(
-        "minibatch_parse", deps[0], (("ROOT", "right"), ("arcs", "only"), ("right", "arcs"))
+        "minibatch_parse",
+        deps[0],
+        (("ROOT", "right"), ("arcs", "only"), ("right", "arcs")),
     )
     test_dependencies(
         "minibatch_parse",
@@ -231,7 +264,9 @@ def test_minibatch_parse():
         (("ROOT", "right"), ("arcs", "only"), ("only", "again"), ("right", "arcs")),
     )
     test_dependencies(
-        "minibatch_parse", deps[2], (("only", "ROOT"), ("only", "arcs"), ("only", "left"))
+        "minibatch_parse",
+        deps[2],
+        (("only", "ROOT"), ("only", "arcs"), ("only", "left")),
     )
     test_dependencies(
         "minibatch_parse",
