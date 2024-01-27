@@ -155,7 +155,6 @@ class ParserModel(nn.Module):
         )
         hidden = self.dropout(hidden)
         logits = torch.matmul(hidden, self.hidden_to_logits_weight) + self.hidden_to_logits_bias
-        logits = self.dropout(logits)
         ### END YOUR CODE
         return logits
 

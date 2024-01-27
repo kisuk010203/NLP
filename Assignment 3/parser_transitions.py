@@ -50,7 +50,6 @@ class PartialParse:
         elif transition == "LA":
             self.dependencies.append((self.stack[-1], self.stack.pop(-2)))
         elif transition == "RA":
-            print(self.stack)
             self.dependencies.append((self.stack[-2], self.stack.pop(-1)))
         else:
             raise Exception("Invalid transition")
