@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 CS224N 2019-20: Homework 4
@@ -18,21 +17,17 @@ Usage:
 """
 import sys
 
-import numpy as np
-
-from docopt import docopt
-from utils import batch_iter
 import nltk
-
-# from utils import read_corpus
-from vocab import Vocab, VocabEntry
-
-from nmt_model import NMT
-
-
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.utils
+from docopt import docopt
+from nmt_model import NMT
+from utils import batch_iter
+
+# from utils import read_corpus
+from vocab import Vocab
 
 # ----------
 # CONSTANTS
@@ -120,7 +115,6 @@ def question_1d_sanity_check(model, src_sents, tgt_sents, vocab):
     # Load Outputs
     enc_hiddens_target = torch.load("./sanity_check_en_es_data/enc_hiddens.pkl")
     dec_init_state_target = torch.load("./sanity_check_en_es_data/dec_init_state.pkl")
-
     # Test
     with torch.no_grad():
         enc_hiddens_pred, dec_init_state_pred = model.encode(source_padded, source_lengths)
@@ -131,9 +125,7 @@ def question_1d_sanity_check(model, src_sents, tgt_sents, vocab):
     )
     assert np.allclose(
         enc_hiddens_target.numpy(), enc_hiddens_pred.numpy()
-    ), "enc_hiddens is incorrect: it should be:\n {} but is:\n{}".format(
-        enc_hiddens_target, enc_hiddens_pred
-    )
+    ), f"enc_hiddens is incorrect: it should be:\n {enc_hiddens_target} but is:\n{enc_hiddens_pred}"
     print("enc_hiddens Sanity Checks Passed!")
     assert (
         dec_init_state_target[0].shape == dec_init_state_pred[0].shape
@@ -185,8 +177,8 @@ def question_1e_sanity_check(model, src_sents, tgt_sents, vocab):
     COUNTER = [0]
 
     def stepFunction(Ybar_t, dec_state, enc_hiddens, enc_hiddens_proj, enc_masks):
-        dec_state = torch.load("./sanity_check_en_es_data/step_dec_state_{}.pkl".format(COUNTER[0]))
-        o_t = torch.load("./sanity_check_en_es_data/step_o_t_{}.pkl".format(COUNTER[0]))
+        dec_state = torch.load(f"./sanity_check_en_es_data/step_dec_state_{COUNTER[0]}.pkl")
+        o_t = torch.load(f"./sanity_check_en_es_data/step_o_t_{COUNTER[0]}.pkl")
         COUNTER[0] += 1
         return dec_state, o_t, None
 
@@ -261,11 +253,11 @@ def question_1f_sanity_check(model, src_sents, tgt_sents, vocab):
     print("dec_state[1] Sanity Checks Passed!")
     assert np.allclose(
         o_t_target.numpy(), o_t_pred.numpy()
-    ), "combined_output is incorrect: it should be:\n {} but is:\n{}".format(o_t_target, o_t_pred)
+    ), f"combined_output is incorrect: it should be:\n {o_t_target} but is:\n{o_t_pred}"
     print("combined_output  Sanity Checks Passed!")
     assert np.allclose(
         e_t_target.numpy(), e_t_pred.numpy()
-    ), "e_t is incorrect: it should be:\n {} but is:\n{}".format(e_t_target, e_t_pred)
+    ), f"e_t is incorrect: it should be:\n {e_t_target} but is:\n{e_t_pred}"
     print("e_t Sanity Checks Passed!")
     print("-" * 80)
     print("All Sanity Checks Passed for Question 1f: Step!")

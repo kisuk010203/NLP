@@ -1,5 +1,5 @@
 [tool.ruff]
-select = ["B", "C4", "E", "F", "N", "I", "W", "UP"]
+select = ["B", "C4", "E", "F", "I", "W", "UP"]
 ignore = ["F403","F405","E501","E402","E731","N803","N806"]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
