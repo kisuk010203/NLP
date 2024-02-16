@@ -10,3 +10,6 @@ This is for the implementation of the inner workflow of the `Word2Vec` function.
 ## Assignment 3
 Now we start to use `pytorch` for implementation. We implement dependency parsing, where a sentence is parsed into a parse tree depending on their dependencies. The way to check which word is dependent to which is ML.
 After 10 epochs each consisted of 1848 iterations, the final test `UAS` was 89.22, and average train loss was 0.07 which fits in the desired result.
+
+## Assignment 4
+This assignment is about using RNN to construct a model translation between Cherokee and English. RNN itself is a linear network, which requires the former job to be completed before a later step is executed. Hence, the efficiency of this was quite low, while the result was actually plausible.
