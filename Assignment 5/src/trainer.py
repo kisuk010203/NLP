@@ -1,8 +1,6 @@
 """
 Simple training loop; Boilerplate that could apply to any arbitrary neural network,
 so nothing in this file really has anything to do with GPT specifically.
-
-We suggest not changing anything in this file.
 """
 
 import math
@@ -36,6 +34,7 @@ class TrainerConfig:
     # checkpoint settings
     ckpt_path = None
     num_workers = 0  # for DataLoader
+    writer = None
 
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -75,8 +74,10 @@ class Trainer:
             {"params": params_nodecay, "weight_decay": 0.0},
         ]
         optimizer = optim.AdamW(optim_groups, lr=config.learning_rate, betas=config.betas)
+        step = 0
 
         def run_epoch(split):
+            nonlocal step
             is_train = split == "train"
             model.train(is_train)
             data = self.train_dataset if is_train else self.test_dataset
@@ -84,6 +85,7 @@ class Trainer:
 
             losses = []
             pbar = tqdm(enumerate(loader), total=len(loader)) if is_train else enumerate(loader)
+
             for it, (x, y) in pbar:
                 # place data on the correct device
                 x = x.to(self.device)
@@ -127,6 +129,11 @@ class Trainer:
                         f"epoch {epoch+1} iter {it}: train loss {loss.item():.5f}. lr {lr:e}"
                     )
 
+                    if config.writer is not None:
+                        config.writer.add_scalar("train/loss", loss.item(), step)
+                        config.writer.add_scalar("train/lr", lr, step)
+
+                step += 1
             if not is_train:
                 logger.info("test loss: %f", np.mean(losses))
 

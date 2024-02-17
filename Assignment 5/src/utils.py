@@ -1,8 +1,3 @@
-""" Utilities; we suggest changing none of these functions
-
-but feel free to add your own.
-"""
-
 import random
 import numpy as np
 import torch
@@ -55,6 +50,16 @@ def sample(model, x, steps, temperature=1.0, sample=False, top_k=None):
     return x
 
 
+def get_name_prediction(model, dataset_object, input_string):
+    x = torch.tensor([dataset_object.stoi[s] for s in input_string], dtype=torch.long)[
+        None, ...
+    ].to(trainer_obj.device)
+    pred = utils.sample(model, x, 32, sample=False)[0]
+    completion = "".join([train_dataset.itos[int(i)] for i in pred])
+    pred = completion.split("⁇")[1]
+    return pred
+
+
 def evaluate_places(filepath, predicted_places):
     """Computes percent of correctly predicted birth places.
 
@@ -65,7 +70,7 @@ def evaluate_places(filepath, predicted_places):
 
     Returns: (total, correct), floats
     """
-    with open(filepath) as fin:
+    with open(filepath, encoding="utf-8") as fin:
         lines = [x.strip().split("\t") for x in fin]
         if len(lines[0]) == 1:
             print("No gold birth places provided; returning (0,0)")
